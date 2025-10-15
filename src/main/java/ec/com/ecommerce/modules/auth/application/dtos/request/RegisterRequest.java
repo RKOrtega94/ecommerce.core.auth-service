@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.Length;
 public record RegisterRequest(
         @NotNull @NotBlank @NotEmpty @Length(min = 3, max = 64) @Pattern(regexp = "^[a-zA-Z]+$", message = "Must be a valid name") String firstname,
         @NotNull @NotBlank @NotEmpty @Length(min = 3, max = 64) @Pattern(regexp = "^[a-zA-Z]+$", message = "Must be a valid name") String lastname,
-        @Email @NotNull @NotBlank @NotEmpty @Length(min = 5, max = 128) @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Must be a valid email address") String email,
+        @Email @NotNull @NotBlank @NotEmpty @Length(min = 5, max = 128) @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Must be a valid email address") String username,
         @NotNull @NotBlank @NotEmpty @Length(min = 3, max = 32) @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[./,&%$@*()_\\-!])[A-Za-z\\d./,&%$@*()_\\-!]{3,32}$", message = "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (./,&%$@*()_-!)") String password,
         @NotNull @NotBlank @NotEmpty String confirmPassword) {
 }

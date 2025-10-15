@@ -1,4 +1,18 @@
-FROM ubuntu:latest
-LABEL authors="Robinson"
+FROM openjdk:24-slim
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+ARG APP_NAME=APP_NAME
+ARG APP_VERSION=0.0.1-SNAPSHOT
+ARG APP_PORT=8080
+
+ENV APP_NAME=${APP_NAME}
+ENV APP_VERSION=${APP_VERSION}
+ENV APP_PORT=${APP_PORT}
+ENV APP_GRPC_PORT=${APP_GRPC_PORT}
+
+COPY build/libs/${APP_NAME}-${APP_VERSION}.jar app.jar
+
+EXPOSE ${APP_PORT}
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

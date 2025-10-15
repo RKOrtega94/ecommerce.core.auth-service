@@ -10,5 +10,6 @@ import jakarta.validation.constraints.NotNull;
  * @param username the username of the user attempting to log in
  * @param password the password of the user attempting to log in
  */
-public record LoginRequest(@NotNull @NotEmpty @NotBlank String username, @NotNull @NotEmpty @NotBlank String password) {
+public record LoginRequest(@NotNull @NotEmpty @NotBlank String username, @NotNull @NotEmpty @NotBlank String password,
+                           Boolean rememberMe) {
 }

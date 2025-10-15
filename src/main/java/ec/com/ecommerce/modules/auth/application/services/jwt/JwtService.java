@@ -1,6 +1,7 @@
-package ec.com.ecommerce.modules.auth.application.services;
+package ec.com.ecommerce.modules.auth.application.services.jwt;
 
-import org.springframework.security.core.userdetails.UserDetails;
+import ec.com.ecommerce.grpc_lib.auth.AuthenticateGrpcResponse;
+import ec.com.ecommerce.modules.auth.application.dtos.response.TokenData;
 
 /**
  * Service for handling JWT operations such as token generation.
@@ -9,16 +10,16 @@ public interface JwtService {
     /**
      * Generates a JWT token for the given user details.
      *
-     * @param userDetails the details of the user for whom the token is to be generated
+     * @param authResponse the details of the user for whom the token is to be generated
      * @return the generated JWT token
      */
-    String genefrateToken(UserDetails userDetails);
+    TokenData genefrateTokens(AuthenticateGrpcResponse authResponse);
 
     /**
-     * Generates a refresh token for the given user details.
+     * Refreshes authentication tokens using a valid refresh token.
      *
-     * @param userDetails the details of the user for whom the refresh token is to be generated
-     * @return the generated refresh token
+     * @param refreshToken the refresh token
+     * @return new access and refresh tokens
      */
-    String generateRefreshToken(UserDetails userDetails);
+    TokenData refreshToken(String refreshToken);
 }
