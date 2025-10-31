@@ -77,8 +77,11 @@ public class SecurityConfig {
                                 "/oauth2/**", //
                                 "/.well-known/jwks.json", //
                                 "/actuator/**", //
+                                "/health/**", //
                                 "/h2-console/**", //
-                                "/error" //
+                                "/error", //
+                                "/v3/api-docs/**", //
+                                "/swagger-ui/**" //
                         ).permitAll() //
                         .anyRequest().authenticated()) //
                 .httpBasic(Customizer.withDefaults()) //

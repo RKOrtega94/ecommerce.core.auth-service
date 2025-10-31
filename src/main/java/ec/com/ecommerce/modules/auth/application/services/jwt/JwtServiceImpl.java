@@ -41,7 +41,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     @Transactional
-    public TokenData genefrateTokens(AuthenticateGrpcResponse authResponse) {
+    public TokenData generateTokens(AuthenticateGrpcResponse authResponse) {
         String userId = authResponse.getSubject();
 
         enforceSessionLimit(userId);
@@ -77,17 +77,7 @@ public class JwtServiceImpl implements JwtService {
             refreshToken = generateToken(refreshPayload);
 
             // Save session to repository
-            UserSession session = UserSession.builder()
-                    .sessionId(sessionId)
-                    .userId(userId)
-                    .roles(new HashSet<>(authResponse.getRolesList()))
-                    .permissions(new HashSet<>(authResponse.getPermissionsList()))
-                    .refreshToken(refreshToken)
-                    .createdAt(now)
-                    .expiresAt(accessExpiry)
-                    .refreshExpiresAt(refreshExpiry)
-                    .revoked(false)
-                    .build();
+            UserSession session = UserSession.builder().sessionId(sessionId).userId(userId).roles(new HashSet<>(authResponse.getRolesList())).permissions(new HashSet<>(authResponse.getPermissionsList())).refreshToken(refreshToken).createdAt(now).expiresAt(accessExpiry).refreshExpiresAt(refreshExpiry).revoked(false).build();
             repository.save(session);
 
             log.debug("Created new session: {} for user: {}", sessionId, userId);
@@ -141,22 +131,9 @@ public class JwtServiceImpl implements JwtService {
                 authorities.addAll(session.getPermissions());
             }
 
-            JWTPayloadRecord accessPayload = JWTPayloadRecord.builder()
-                    .jti(newJti)
-                    .sub(userId)
-                    .iat(now)
-                    .exp(accessExpiry)
-                    .authorities(authorities)
-                    .type(TokenType.ACCESS.name())
-                    .additionalClaims(new Object[]{"sessionId", sessionId})
-                    .build();
+            JWTPayloadRecord accessPayload = JWTPayloadRecord.builder().jti(newJti).sub(userId).iat(now).exp(accessExpiry).authorities(authorities).type(TokenType.ACCESS.name()).additionalClaims(new Object[]{"sessionId", sessionId}).build();
 
-            JWTPayloadRecord refreshPayload = JWTPayloadRecord.builder()
-                    .iat(now)
-                    .exp(refreshExpiry)
-                    .type(TokenType.REFRESH.name())
-                    .additionalClaims(new Object[]{"sessionId", sessionId})
-                    .build();
+            JWTPayloadRecord refreshPayload = JWTPayloadRecord.builder().iat(now).exp(refreshExpiry).type(TokenType.REFRESH.name()).additionalClaims(new Object[]{"sessionId", sessionId}).build();
 
             newAccessToken = generateToken(accessPayload);
             newRefreshToken = generateToken(refreshPayload);

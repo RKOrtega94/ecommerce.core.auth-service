@@ -15,6 +15,7 @@ public class RegisterPort implements RegisterUseCase {
 
     @Override
     public void execute(RegisterRequest request) {
-        client.register(mapper.toGrpcRequest(request));
+        var response = client.register(mapper.toGrpcRequest(request));
+        if (!response.getSuccess()) throw new IllegalArgumentException("Registration failed: " + response.getMessage());
     }
 }

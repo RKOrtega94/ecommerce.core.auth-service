@@ -13,7 +13,7 @@ public interface JwtService {
      * @param authResponse the details of the user for whom the token is to be generated
      * @return the generated JWT token
      */
-    TokenData genefrateTokens(AuthenticateGrpcResponse authResponse);
+    TokenData generateTokens(AuthenticateGrpcResponse authResponse);
 
     /**
      * Refreshes authentication tokens using a valid refresh token.

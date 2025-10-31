@@ -23,9 +23,7 @@ public class LoginUserPort implements LoginUserUseCase {
     @Override
     public AuthResponse execute(LoginRequest request) {
         AuthenticateGrpcResponse response = client.authenticate(mapper.toGrpcRequest(request));
-        log.debug("Response from auth service: {}", response.toString());
-
-        TokenData tokenData = jwtService.genefrateTokens(response);
+        TokenData tokenData = jwtService.generateTokens(response);
         return new AuthResponse(tokenData.accessToken(), tokenData.refreshToken());
     }
 }

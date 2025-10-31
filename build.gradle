@@ -1,5 +1,6 @@
 apply plugin: "org.flywaydb.flyway"
 apply plugin: "com.google.protobuf"
+apply plugin: 'org.springdoc.openapi-gradle-plugin'
 
 description = "Authentication and Authorization Service"
 
@@ -23,6 +24,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
+    implementation project(":libs:commons")
     implementation project(":libs:grpc-lib")
 
     implementation 'io.grpc:grpc-services'
@@ -46,11 +48,11 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc'
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
     }
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java'
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
         }
     }
     generateProtoTasks {
@@ -58,6 +60,16 @@ protobuf {
             grpc {
                 option '@generated=omit'
             }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java'
+            srcDirs 'build/generated/source/proto/main/java'
+            srcDirs 'build/generated/source/proto/main/grpc'
         }
     }
 }
