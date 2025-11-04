@@ -19,8 +19,6 @@ ARG GRPC_PORT=9090
 
 ENV SPRING_PROFILES_ACTIVE=${PROFILE}
 ENV SERVER_PORT=${SERVER_PORT}
-ENV REDIS_HOST=${REDIS_HOST}
-ENV REDIS_PORT=${REDIS_PORT}
 ENV GRPC_PORT=${GRPC_PORT}
 
 COPY --chown=appuser:appgroup build/libs/${SERVICE_NAME}.jar app.jar
@@ -35,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD curl --fail http://localhost:${SERVER_PORT}/health/${SERVICE_NAME}/status || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
-CMD ["--spring.profiles.active=${SPRING_PROFILES_ACTIVE}", "--server.port=${SERVER_PORT}"]
+CMD ["--spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]
