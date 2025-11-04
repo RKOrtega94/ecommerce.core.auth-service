@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * JPA Entity for oauth2_registered_client table
@@ -19,8 +20,9 @@ import java.time.Instant;
 public class OAuth2RegisteredClientEntity {
 
     @Id
-    @Column(name = "id", length = 100)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", columnDefinition = "UUID")
+    private UUID id;
 
     @Column(name = "client_id", length = 100, nullable = false, unique = true)
     private String clientId;
