@@ -1,13 +1,13 @@
 package ec.com.ecommerce.auth.adapter.rest;
 
-import ec.com.ecommerce.models.ApiResponse;
-import ec.com.ecommerce.models.SuccessEmptyResponse;
-import ec.com.ecommerce.models.SuccessResponse;
 import ec.com.ecommerce.auth.application.dtos.request.LoginRequest;
 import ec.com.ecommerce.auth.application.dtos.request.RefreshTokenRequest;
 import ec.com.ecommerce.auth.application.dtos.request.RegisterRequest;
 import ec.com.ecommerce.auth.application.dtos.response.AuthResponse;
 import ec.com.ecommerce.auth.application.services.auth.AuthService;
+import ec.com.ecommerce.models.ApiResponse;
+import ec.com.ecommerce.models.SuccessEmptyResponse;
+import ec.com.ecommerce.models.SuccessResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
