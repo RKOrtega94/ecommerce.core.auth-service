@@ -14,6 +14,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -24,8 +26,10 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -33,9 +37,13 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class AuthSecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:http://localhost:8080}")
     private String issuerUri;
 
@@ -49,13 +57,28 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        var authorizationServerConfigurer = new org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer();
-        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher()) //
-                .with(authorizationServerConfigurer, authorizationServer -> authorizationServer.oidc(Customizer.withDefaults())) //
-                .authorizeHttpRequests(authorization -> authorization.anyRequest().permitAll()) //
-                .csrf(AbstractHttpConfigurer::disable) //
-                .cors(AbstractHttpConfigurer::disable) //
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, authException) -> response.sendError(401, "Unauthorized")));
+        http.with(new OAuth2AuthorizationServerConfigurer(), authServer -> authServer.oidc(oidc -> oidc //
+                .clientRegistrationEndpoint(Customizer.withDefaults()) //
+                .userInfoEndpoint(Customizer.withDefaults())));
+        http
+                // Stateless session management - no sessions will be created or used by Spring Security
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Exception handling - Return JSON errors instead of redirecting to the login page
+                .exceptionHandling(exceptions -> exceptions
+                        // Return 401 Unauthorized for unauthenticated requests
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(UNAUTHORIZED))
+                        // Access denied handler
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(FORBIDDEN.value());
+                            response.setContentType(APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"error\":\"access_denied\",\"message\":\"" + accessDeniedException.getMessage() + "\"}");
+                        }))
+                // Enable OAuth2 Resource Server support with JWT
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        // JWT authentication
+                        .jwt(Customizer.withDefaults())
+                        // Return 401 Unauthorized for unauthenticated requests
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(UNAUTHORIZED)));
         return http.build();
     }
 
@@ -69,22 +92,39 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable) //
-                .cors(AbstractHttpConfigurer::disable) //
+        http
+                // Authorize requests
                 .authorizeHttpRequests(authorize -> authorize //
                         .requestMatchers("/api/auth/**", //
-                                "/oauth2/**", //
-                                "/.well-known/jwks.json", //
-                                "/actuator/**", //
+                                "/oauth2/token", //
+                                "/.well-known/**", //
                                 "/health/**", //
-                                "/h2-console/**", //
-                                "/error", //
                                 "/v3/api-docs/**", //
                                 "/swagger-ui/**" //
                         ).permitAll() //
-                        .anyRequest().authenticated()) //
-                .httpBasic(Customizer.withDefaults()) //
-                .formLogin(AbstractHttpConfigurer::disable); //
+                        .anyRequest().authenticated())
+                // HTTP Basic Authentication
+                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new HttpStatusEntryPoint(UNAUTHORIZED)))
+                // Disable form login
+                .formLogin(AbstractHttpConfigurer::disable)
+                // Stateless session management - no sessions will be created or used by Spring Security
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Disable CSRF
+                .csrf(AbstractHttpConfigurer::disable)
+                // Enable CORS with default settings
+                .cors(Customizer.withDefaults()) //
+                // Exception handling - return JSON errors
+                .exceptionHandling(exceptions -> exceptions
+                        // Return 401 Unauthorized for unauthenticated requests
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(UNAUTHORIZED))
+                        // Access denied handler
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(FORBIDDEN.value());
+                            response.setContentType(APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"error\":\"forbidden\",\"message\":\"" + accessDeniedException.getMessage() + "\"}");
+                        }))
+                // Configure headers
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
         return http.build();
     }
 
@@ -195,6 +235,22 @@ public class SecurityConfig {
      */
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().issuer(issuerUri).build();
+        return AuthorizationServerSettings.builder()
+                // Set the issuer URI
+                .issuer(issuerUri)
+                // OAuth2 Authorization endpoint: used by clients to obtain authorization grants
+                .authorizationEndpoint("/oauth2/authorize")
+                // OAuth2 Token endpoint: used by clients to exchange authorization grants for tokens
+                .tokenEndpoint("/oauth2/token")
+                // OAuth2 Token Introspection endpoint: used to check the validity and meta-information of tokens
+                .tokenIntrospectionEndpoint("/oauth2/introspect")
+                // OAuth2 Token Revocation endpoint: used to revoke access or refresh tokens
+                .tokenRevocationEndpoint("/oauth2/revoke")
+                // JWK Set endpoint: exposes the public keys used to verify JWT signatures
+                .jwkSetEndpoint("/oauth2/jwks")
+                // OIDC UserInfo endpoint: returns claims about the authenticated end-user
+                .oidcUserInfoEndpoint("/userinfo")
+                // OIDC Dynamic Client Registration endpoint: allows clients to register with the authorization server
+                .oidcClientRegistrationEndpoint("/connect/register").build();
     }
 }
