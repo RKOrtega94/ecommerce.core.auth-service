@@ -45,6 +45,19 @@ dependencies {
     implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "com.google.protobuf:protobuf-java:${protobufVersion}"
+        force "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+        force "io.grpc:grpc-protobuf:${grpcVersion}"
+        force "io.grpc:grpc-stub:${grpcVersion}"
+        force "io.grpc:grpc-api:${grpcVersion}"
+        force "io.grpc:grpc-core:${grpcVersion}"
+    }
 }
 
 protobuf {

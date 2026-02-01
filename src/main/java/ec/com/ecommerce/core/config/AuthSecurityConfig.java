@@ -57,6 +57,8 @@ public class AuthSecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        // Only match Authorization Server endpoints
+        http.securityMatcher("/oauth2/**", "/.well-known/**", "/connect/**", "/userinfo");
         http.with(new OAuth2AuthorizationServerConfigurer(), authServer -> authServer.oidc(oidc -> oidc //
                 .clientRegistrationEndpoint(Customizer.withDefaults()) //
                 .userInfoEndpoint(Customizer.withDefaults())));
@@ -92,6 +94,11 @@ public class AuthSecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        // Match all requests except Authorization Server endpoints
+        http.securityMatcher(request -> !request.getRequestURI().startsWith("/oauth2/")
+                && !request.getRequestURI().startsWith("/.well-known/")
+                && !request.getRequestURI().startsWith("/connect/")
+                && !request.getRequestURI().equals("/userinfo"));
         http
                 // Authorize requests
                 .authorizeHttpRequests(authorize -> authorize //

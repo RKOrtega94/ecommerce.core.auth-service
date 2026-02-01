@@ -1,5 +1,6 @@
 package ec.com.ecommerce.auth.application.dtos.response;
 
+import lombok.Builder;
 import lombok.With;
 
 /**
@@ -9,5 +10,6 @@ import lombok.With;
  * @param refreshToken token used to obtain a new access token
  */
 @With
+@Builder
 public record AuthResponse(String accessToken, String refreshToken) {
 }

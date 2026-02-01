@@ -71,4 +71,10 @@ public class AuthController {
         SuccessResponse<AuthResponse> apiResponse = SuccessResponse.ok(response, "Token refreshed successfully");
         return ResponseEntity.ok(apiResponse);
     }
+
+//    @GetMapping("/users")
+//    public ResponseEntity<List<UserEntity>> getAllUsers() {
+//        List<UserEntity> users = service.getAllUsers();
+//        return ResponseEntity.ok(users);
+//    }
 }

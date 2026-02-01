@@ -6,15 +6,19 @@ import ec.com.ecommerce.auth.application.dtos.response.AuthResponse;
 import ec.com.ecommerce.auth.application.services.jwt.JwtService;
 import ec.com.ecommerce.auth.domain.usecases.LoginUserUseCase;
 import ec.com.ecommerce.auth.domain.usecases.RegisterUseCase;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final LoginUserUseCase loginUser;
     private final RegisterUseCase register;
     private final JwtService jwtService;
+
+    public AuthServiceImpl(LoginUserUseCase loginUser, RegisterUseCase register, JwtService jwtService) {
+        this.loginUser = loginUser;
+        this.register = register;
+        this.jwtService = jwtService;
+    }
 
     @Override
     public AuthResponse login(LoginRequest request) {

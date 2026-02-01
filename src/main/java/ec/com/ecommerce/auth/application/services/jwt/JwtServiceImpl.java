@@ -8,10 +8,11 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import ec.com.ecommerce.grpc_lib.auth.AuthenticateGrpcResponse;
 import ec.com.ecommerce.auth.adapter.persistence.UserSessionRepository;
 import ec.com.ecommerce.auth.application.dtos.response.TokenData;
 import ec.com.ecommerce.auth.domain.entities.UserSession;
+import ec.com.ecommerce.remote.security.entities.RoleEntity;
+import ec.com.ecommerce.remote.security.entities.UserEntity;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,52 +43,42 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     @Transactional
-    public TokenData generateTokens(AuthenticateGrpcResponse authResponse) {
-        String userId = authResponse.getSubject();
-
+    public TokenData generateTokens(UserEntity entity) {
+        var userId = entity.getUsername();
         enforceSessionLimit(userId);
-
-        String jti = UUID.randomUUID().toString();
-        String sessionId = UUID.randomUUID().toString();
-
-        Instant now = Instant.now();
-        Instant accessExpiry = now.plusSeconds(accessTokenExpiration);
-        Instant refreshExpiry = now.plusSeconds(refreshTokenExpiration);
-
-        String accessToken;
-        String refreshToken;
-
-        try {
-            Set<String> authorities = new HashSet<>(authResponse.getRolesList());
-            authorities.addAll(new HashSet<>(authResponse.getPermissionsList()));
-            JWTPayloadRecord accessPayload = JWTPayloadRecord.builder() //
-                    .jti(jti).sub(userId) //
-                    .iat(now) //
-                    .exp(accessExpiry) //
-                    .authorities(authorities) //
-                    .type(TokenType.ACCESS.name()) //
-                    .additionalClaims(new Object[]{"sessionId", sessionId}) //
-                    .build();
-            JWTPayloadRecord refreshPayload = JWTPayloadRecord.builder() //
-                    .iat(now) //
-                    .exp(refreshExpiry) //
-                    .type(TokenType.REFRESH.name()) //
-                    .additionalClaims(new Object[]{"sessionId", sessionId}) //
-                    .build();
-            accessToken = generateToken(accessPayload);
-            refreshToken = generateToken(refreshPayload);
-
-            // Save session to repository
-            UserSession session = UserSession.builder().sessionId(sessionId).userId(userId).roles(new HashSet<>(authResponse.getRolesList())).permissions(new HashSet<>(authResponse.getPermissionsList())).refreshToken(refreshToken).createdAt(now).expiresAt(accessExpiry).refreshExpiresAt(refreshExpiry).revoked(false).build();
-            repository.save(session);
-
-            log.debug("Created new session: {} for user: {}", sessionId, userId);
-        } catch (Exception e) {
-            log.error("Error generating tokens for user: {}", userId, e);
-            throw new RuntimeException("Failed to generate tokens", e);
+        var jti = UUID.randomUUID().toString();
+        var sessionId = UUID.randomUUID().toString();
+        var accessExpiry = Instant.now().plusSeconds(accessTokenExpiration);
+        var refreshExpiry = Instant.now().plusSeconds(refreshTokenExpiration);
+        Set<String> authorities = new HashSet<>();
+        entity.getDirectPermissions().forEach(permission -> authorities.add(permission.getPermission().getName()));
+        if (!entity.getRoles().isEmpty()) {
+            for (RoleEntity role : entity.getRoles()) {
+                authorities.add(role.getName());
+                role.getPermissions().forEach(permission -> authorities.add(permission.getPermission().getName()));
+            }
         }
-
-        return new TokenData(accessToken, refreshToken);
+        var accessPayload = createPayloadRecord(jti, userId, Instant.now(), accessExpiry, authorities, TokenType.ACCESS, "sessionId", sessionId);
+        var refreshPayload = createPayloadRecord(null, null, Instant.now(), refreshExpiry, null, TokenType.REFRESH, "sessionId", sessionId);
+        try {
+            var accessToken = generateToken(accessPayload);
+            var refreshToken = generateToken(refreshPayload);
+            var userSession = UserSession.builder() //
+                    .sessionId(sessionId) //
+                    .userId(userId) //
+                    .roles(entity.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet())) //
+                    .permissions(authorities) //
+                    .refreshToken(refreshToken) //
+                    .createdAt(Instant.now()) //
+                    .expiresAt(accessExpiry) //
+                    .refreshExpiresAt(refreshExpiry) //
+                    .revoked(false) //
+                    .build();
+            repository.save(userSession);
+            return TokenData.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -202,6 +194,14 @@ public class JwtServiceImpl implements JwtService {
                 log.info("Revoked oldest session: {} for user {}", oldestSession.getSessionId(), userId);
             }
         }
+    }
+
+    private JWTPayloadRecord createPayloadRecord(String jti, String sub, Instant iat, Instant exp, Set<String> authorities, TokenType type, Object... additionalClaims) {
+        JWTPayloadRecord.JWTPayloadRecordBuilder builder = JWTPayloadRecord.builder().iat(iat).exp(exp).type(type.name()).additionalClaims(additionalClaims);
+        if (jti != null) builder.jti(jti);
+        if (sub != null) builder.sub(sub);
+        if (authorities != null) builder.authorities(authorities);
+        return builder.build();
     }
 
     /**
