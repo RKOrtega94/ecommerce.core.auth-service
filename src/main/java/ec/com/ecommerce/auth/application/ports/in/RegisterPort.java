@@ -1,9 +1,9 @@
-package ec.com.ecommerce.auth.application.ports;
+package ec.com.ecommerce.auth.application.ports.in;
 
-import ec.com.ecommerce.grpc_lib.auth.AuthGrpcClient;
 import ec.com.ecommerce.auth.application.dtos.request.RegisterRequest;
 import ec.com.ecommerce.auth.application.mappers.AuthMapper;
 import ec.com.ecommerce.auth.domain.usecases.RegisterUseCase;
+import ec.com.ecommerce.grpc_lib.auth.AuthGrpcClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

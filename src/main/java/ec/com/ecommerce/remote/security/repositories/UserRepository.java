@@ -14,19 +14,19 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     /**
-     * Find user by username with eager loading of roles and direct permissions
+     * Find a user by username with eager loading of roles and direct permissions
      */
     @Query("""
             SELECT DISTINCT u FROM UserEntity u
             LEFT JOIN FETCH u.roles r
-            LEFT JOIN FETCH r.permissions
-            LEFT JOIN FETCH u.directPermissions
+            LEFT JOIN FETCH r.permissions rp
+            LEFT JOIN FETCH u.directPermissions dp
             WHERE u.username = :username
             """)
     Optional<UserEntity> findByUsername(@NotNull @NotEmpty @NotBlank String username);
 
     /**
-     * Find user by ID with eager loading of roles and direct permissions
+     * Find a user by ID with eager loading of roles and direct permissions
      */
     @Query("""
             SELECT DISTINCT u FROM UserEntity u

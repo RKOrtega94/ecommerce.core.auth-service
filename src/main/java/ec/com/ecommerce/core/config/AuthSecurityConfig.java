@@ -44,7 +44,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Configuration
 @EnableWebSecurity
 public class AuthSecurityConfig {
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:http://localhost:8080}")
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:http://localhost:8083}")
     private String issuerUri;
 
     /**

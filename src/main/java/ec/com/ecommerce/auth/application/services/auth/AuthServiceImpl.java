@@ -1,5 +1,6 @@
 package ec.com.ecommerce.auth.application.services.auth;
 
+import ec.com.ecommerce.auth.application.dtos.request.GuestTokenRequest;
 import ec.com.ecommerce.auth.application.dtos.request.LoginRequest;
 import ec.com.ecommerce.auth.application.dtos.request.RegisterRequest;
 import ec.com.ecommerce.auth.application.dtos.response.AuthResponse;
@@ -34,5 +35,10 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse refreshToken(String refreshToken) {
         var tokenData = jwtService.refreshToken(refreshToken);
         return new AuthResponse(tokenData.accessToken(), tokenData.refreshToken());
+    }
+
+    @Override
+    public AuthResponse guestToken(GuestTokenRequest request) {
+        return null;
     }
 }

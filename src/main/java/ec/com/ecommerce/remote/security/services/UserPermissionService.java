@@ -2,6 +2,8 @@ package ec.com.ecommerce.remote.security.services;
 
 import ec.com.ecommerce.remote.security.entities.RemotePermissionEntity;
 import ec.com.ecommerce.remote.security.entities.UserEntity;
+import ec.com.ecommerce.remote.security.mappers.UserEntityMapper;
+import ec.com.ecommerce.remote.security.projections.LoginUserProjection;
 import ec.com.ecommerce.remote.security.repositories.EntityPermissionRepository;
 import ec.com.ecommerce.remote.security.repositories.RemotePermissionRepository;
 import ec.com.ecommerce.remote.security.repositories.RolePermissionRepository;
@@ -30,6 +32,7 @@ public class UserPermissionService {
     private final RemotePermissionRepository remotePermissionRepository;
     private final EntityPermissionRepository entityPermissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final UserEntityMapper userEntityMapper;
 
     /**
      * Get all permissions for a user combining direct and role-based permissions
@@ -57,11 +60,12 @@ public class UserPermissionService {
      * Get user by username with all associated roles and direct permissions
      *
      * @param username The username
-     * @return Optional containing UserEntity with eager-loaded roles and permissions
+     * @return Optional containing LoginUserProjection with user details
      */
-    public Optional<UserEntity> getUserWithPermissionsByUsername(String username) {
+    public Optional<LoginUserProjection> getUserWithPermissionsByUsername(String username) {
         log.debug("Fetching user with permissions by username: {}", username);
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsername(username)
+                .map(userEntityMapper::toLoginUserProjection);
     }
 
     /**

@@ -1,5 +1,6 @@
 package ec.com.ecommerce.auth.adapter.rest;
 
+import ec.com.ecommerce.auth.application.dtos.request.GuestTokenRequest;
 import ec.com.ecommerce.auth.application.dtos.request.LoginRequest;
 import ec.com.ecommerce.auth.application.dtos.request.RefreshTokenRequest;
 import ec.com.ecommerce.auth.application.dtos.request.RegisterRequest;
@@ -72,9 +73,17 @@ public class AuthController {
         return ResponseEntity.ok(apiResponse);
     }
 
-//    @GetMapping("/users")
-//    public ResponseEntity<List<UserEntity>> getAllUsers() {
-//        List<UserEntity> users = service.getAllUsers();
-//        return ResponseEntity.ok(users);
-//    }
+    @Operation(summary = "Generate guest token", description = "Generate a guest token for unauthenticated access.")
+    @PostMapping(value = "/guest-token", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse> guestTokenForm(@ModelAttribute @Valid GuestTokenRequest request) {
+        var response = service.guestToken(request);
+        return ResponseEntity.ok(SuccessResponse.ok(response, "Guest token generated successfully"));
+    }
+
+    @Operation(summary = "Generate guest token", description = "Generate a guest token for unauthenticated access.")
+    @PostMapping(value = "/guest-token", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse> guestTokenJson(@RequestBody @Valid GuestTokenRequest request) {
+        var response = service.guestToken(request);
+        return ResponseEntity.ok(SuccessResponse.ok(response, "Guest token generated successfully"));
+    }
 }

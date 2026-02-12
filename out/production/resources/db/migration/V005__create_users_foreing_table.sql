@@ -1,6 +1,6 @@
 SET search_path TO @@DATABASE_SCHEMA@@;
 
--- Create users_foreing table
+-- Create foreign table for users
 CREATE
     FOREIGN TABLE IF NOT EXISTS remote_users
     (
@@ -10,7 +10,7 @@ CREATE
         username VARCHAR(50) NOT NULL,
         password VARCHAR(255) NOT NULL,
         password_expiration TIMESTAMP WITHOUT TIME ZONE,
-        status VARCHAR(20) NOT NULL,
+        status status_enum  NOT NULL,
         created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
         updated_at TIMESTAMP WITHOUT TIME ZONE,
         deleted_at TIMESTAMP WITHOUT TIME ZONE,

@@ -7,7 +7,7 @@ CREATE
     (
         id UUID NOT NULL,
         name VARCHAR(50) NOT NULL,
-        status VARCHAR(20) NOT NULL,
+        status status_enum NOT NULL,
         created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
         updated_at TIMESTAMP WITHOUT TIME ZONE,
         deleted_at TIMESTAMP WITHOUT TIME ZONE,
@@ -22,7 +22,7 @@ CREATE
     (
         user_id UUID NOT NULL,
         role_id UUID NOT NULL,
-        status VARCHAR(20) NOT NULL,
+        status status_enum NOT NULL,
         created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
         updated_at TIMESTAMP WITHOUT TIME ZONE,
         deleted_at TIMESTAMP WITHOUT TIME ZONE,
